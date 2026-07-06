@@ -1,5 +1,4 @@
 let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
-let draggedId = null;
 
 function saveTasks() {
     localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
@@ -8,16 +7,15 @@ function saveTasks() {
 function addTask() {
 
     const input = document.getElementById("taskInput");
-
     const text = input.value.trim();
 
-    if(text === ""){
-        alert("Enter a task.");
+    if (text === "") {
+        alert("Please enter a task.");
         return;
     }
 
     tasks.push({
-        id: Date.now(),
+        id: crypto.randomUUID(),
         text: text,
         status: "todo"
     });
@@ -29,37 +27,39 @@ function addTask() {
 
 }
 
-function renderTasks(){
+function renderTasks() {
 
-    document.getElementById("todo").innerHTML = "";
-    document.getElementById("progress").innerHTML = "";
-    document.getElementById("done").innerHTML = "";
+    const columns = ["todo", "progress", "done"];
 
-    tasks.forEach(task=>{
+    columns.forEach(column => {
+        document.getElementById(column).innerHTML = "";
+    });
+
+    tasks.forEach(task => {
 
         const card = document.createElement("div");
 
         card.className = "card";
-
         card.draggable = true;
-
-        card.id = task.id;
-
-        card.ondragstart = drag;
+        card.dataset.id = task.id;
 
         card.innerHTML = `
             <p>${task.text}</p>
 
-            <button class="edit"
-            onclick="editTask(${task.id})">
-            Edit
-            </button>
+            <button class="edit">Edit</button>
 
-            <button class="delete"
-            onclick="deleteTask(${task.id})">
-            Delete
-            </button>
+            <button class="delete">Delete</button>
         `;
+
+        card.addEventListener("dragstart", dragStart);
+
+        card.querySelector(".edit").addEventListener("click", () => {
+            editTask(task.id);
+        });
+
+        card.querySelector(".delete").addEventListener("click", () => {
+            deleteTask(task.id);
+        });
 
         document.getElementById(task.status).appendChild(card);
 
@@ -67,53 +67,32 @@ function renderTasks(){
 
 }
 
-function editTask(id){
+function dragStart(event) {
 
-    const task = tasks.find(t=>t.id===id);
-
-    const newText = prompt("Edit Task",task.text);
-
-    if(newText===null) return;
-
-    task.text = newText.trim();
-
-    saveTasks();
-
-    renderTasks();
+    event.dataTransfer.setData(
+        "text/plain",
+        event.currentTarget.dataset.id
+    );
 
 }
 
-function deleteTask(id){
-
-    tasks = tasks.filter(task=>task.id!==id);
-
-    saveTasks();
-
-    renderTasks();
-
-}
-
-function drag(event){
-
-    draggedId = event.target.id;
-
-}
-
-function allowDrop(event){
+function allowDrop(event) {
 
     event.preventDefault();
 
 }
 
-function drop(event){
+function drop(event) {
 
     event.preventDefault();
+
+    const id = event.dataTransfer.getData("text/plain");
 
     const column = event.currentTarget.id;
 
-    const task = tasks.find(t=>t.id==draggedId);
+    const task = tasks.find(t => t.id === id);
 
-    if(task){
+    if (task) {
 
         task.status = column;
 
@@ -124,5 +103,45 @@ function drop(event){
     }
 
 }
+
+function editTask(id) {
+
+    const task = tasks.find(t => t.id === id);
+
+    const updated = prompt("Edit Task", task.text);
+
+    if (updated === null) return;
+
+    const text = updated.trim();
+
+    if (text === "") return;
+
+    task.text = text;
+
+    saveTasks();
+
+    renderTasks();
+
+}
+
+function deleteTask(id) {
+
+    if (!confirm("Delete this task?")) return;
+
+    tasks = tasks.filter(task => task.id !== id);
+
+    saveTasks();
+
+    renderTasks();
+
+}
+
+document.querySelectorAll(".task-list").forEach(column => {
+
+    column.addEventListener("dragover", allowDrop);
+
+    column.addEventListener("drop", drop);
+
+});
 
 renderTasks();
