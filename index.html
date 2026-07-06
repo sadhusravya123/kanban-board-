@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Kanban Board</title>
 
 <link rel="stylesheet" href="style.css">
 
 </head>
+
 <body>
 
 <h1>📋 Kanban Board</h1>
@@ -19,7 +24,7 @@ type="text"
 id="taskInput"
 placeholder="Enter task">
 
-<button onclick="addTask()">
+<button id="addBtn">
 Add Card
 </button>
 
@@ -31,11 +36,8 @@ Add Card
 
 <h2>To Do</h2>
 
-<div
-class="task-list"
-id="todo"
-ondrop="drop(event)"
-ondragover="allowDrop(event)">
+<div class="task-list" id="todo">
+
 </div>
 
 </div>
@@ -44,11 +46,8 @@ ondragover="allowDrop(event)">
 
 <h2>In Progress</h2>
 
-<div
-class="task-list"
-id="progress"
-ondrop="drop(event)"
-ondragover="allowDrop(event)">
+<div class="task-list" id="progress">
+
 </div>
 
 </div>
@@ -57,11 +56,8 @@ ondragover="allowDrop(event)">
 
 <h2>Done</h2>
 
-<div
-class="task-list"
-id="done"
-ondrop="drop(event)"
-ondragover="allowDrop(event)">
+<div class="task-list" id="done">
+
 </div>
 
 </div>
@@ -71,4 +67,5 @@ ondragover="allowDrop(event)">
 <script src="script.js"></script>
 
 </body>
+
 </html>
