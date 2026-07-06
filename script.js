@@ -24,16 +24,13 @@ function addTask() {
 
     saveTasks();
     renderTasks();
-
 }
 
 function renderTasks() {
 
-    const columns = ["todo", "progress", "done"];
-
-    columns.forEach(column => {
-        document.getElementById(column).innerHTML = "";
-    });
+    document.getElementById("todo").innerHTML = "";
+    document.getElementById("progress").innerHTML = "";
+    document.getElementById("done").innerHTML = "";
 
     tasks.forEach(task => {
 
@@ -74,7 +71,19 @@ function dragStart(event) {
         event.currentTarget.dataset.id
     );
 
+    event.currentTarget.style.opacity = "0.5";
+
 }
+
+document.addEventListener("dragend", function(event) {
+
+    if(event.target.classList.contains("card")){
+
+        event.target.style.opacity = "1";
+
+    }
+
+});
 
 function allowDrop(event) {
 
@@ -92,7 +101,7 @@ function drop(event) {
 
     const task = tasks.find(t => t.id === id);
 
-    if (task) {
+    if(task){
 
         task.status = column;
 
@@ -110,11 +119,11 @@ function editTask(id) {
 
     const updated = prompt("Edit Task", task.text);
 
-    if (updated === null) return;
+    if(updated === null) return;
 
     const text = updated.trim();
 
-    if (text === "") return;
+    if(text === "") return;
 
     task.text = text;
 
@@ -126,7 +135,7 @@ function editTask(id) {
 
 function deleteTask(id) {
 
-    if (!confirm("Delete this task?")) return;
+    if(!confirm("Delete this task?")) return;
 
     tasks = tasks.filter(task => task.id !== id);
 
@@ -136,20 +145,21 @@ function deleteTask(id) {
 
 }
 
-document.querySelectorAll(".task-list").forEach(column => {
-
-    column.addEventListener("dragover", allowDrop);
-
-    column.addEventListener("drop", drop);
-
-});
-
 document.addEventListener("DOMContentLoaded", () => {
 
     renderTasks();
 
-    document.getElementById("addBtn")
-        .addEventListener("click", addTask);
+    document.getElementById("addBtn").addEventListener("click", addTask);
+
+    document.getElementById("taskInput").addEventListener("keypress", function(event){
+
+        if(event.key === "Enter"){
+
+            addTask();
+
+        }
+
+    });
 
     document.querySelectorAll(".task-list").forEach(column => {
 
