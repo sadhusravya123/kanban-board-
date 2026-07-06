@@ -1,71 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Kanban Board</title>
-
-<link rel="stylesheet" href="style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h1>📋 Kanban Board</h1>
+    <h1>📋 Kanban Board</h1>
 
-<div class="add-task">
+    <p class="subtitle">
+        Drag and drop tasks across columns. Your board is automatically saved.
+    </p>
 
-<input
-type="text"
-id="taskInput"
-placeholder="Enter task">
+    <div class="add-task">
 
-<button id="addBtn">
-Add Card
-</button>
+        <input
+            type="text"
+            id="taskInput"
+            placeholder="Enter a new task">
 
-</div>
+        <button id="addBtn">
+            Add Card
+        </button>
 
-<div class="board">
+    </div>
 
-<div class="column">
+    <div class="board">
 
-<h2>To Do</h2>
+        <div class="column">
 
-<div class="task-list" id="todo">
+            <h2>📝 To Do</h2>
 
-</div>
+            <div class="task-list" id="todo"></div>
 
-</div>
+        </div>
 
-<div class="column">
+        <div class="column">
 
-<h2>In Progress</h2>
+            <h2>🚀 In Progress</h2>
 
-<div class="task-list" id="progress">
+            <div class="task-list" id="progress"></div>
 
-</div>
+        </div>
 
-</div>
+        <div class="column">
 
-<div class="column">
+            <h2>✅ Done</h2>
 
-<h2>Done</h2>
+            <div class="task-list" id="done"></div>
 
-<div class="task-list" id="done">
+        </div>
 
-</div>
+    </div>
 
-</div>
-
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 
 </body>
-
 </html>
