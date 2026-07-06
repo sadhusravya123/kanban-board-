@@ -1,91 +1,96 @@
 const taskInput = document.getElementById("taskInput");
 const addBtn = document.getElementById("addBtn");
 
-const columns = {
-    todo: document.getElementById("todo"),
-    progress: document.getElementById("progress"),
-    done: document.getElementById("done")
-};
+const todo = document.getElementById("todo");
+const progress = document.getElementById("progress");
+const done = document.getElementById("done");
 
-let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
 function saveTasks() {
-    localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
 function updateCounts() {
     document.getElementById("todoCount").textContent =
-        `(${tasks.filter(task => task.status === "todo").length})`;
+        "(" + tasks.filter(task => task.status === "todo").length + ")";
 
     document.getElementById("progressCount").textContent =
-        `(${tasks.filter(task => task.status === "progress").length})`;
+        "(" + tasks.filter(task => task.status === "progress").length + ")";
 
     document.getElementById("doneCount").textContent =
-        `(${tasks.filter(task => task.status === "done").length})`;
-}
-
-function showEmptyMessages() {
-    Object.keys(columns).forEach(status => {
-        const column = columns[status];
-
-        if (column.children.length === 0) {
-            column.innerHTML = `<div class="empty">No tasks</div>`;
-        }
-    });
+        "(" + tasks.filter(task => task.status === "done").length + ")";
 }
 
 function renderTasks() {
-
-    Object.values(columns).forEach(col => col.innerHTML = "");
+    todo.innerHTML = "";
+    progress.innerHTML = "";
+    done.innerHTML = "";
 
     tasks.forEach(task => {
-
         const card = document.createElement("div");
         card.className = "card";
         card.draggable = true;
         card.dataset.id = task.id;
 
-        card.innerHTML = `
-            <p>${task.text}</p>
-            <button class="edit">Edit</button>
-            <button class="delete">Delete</button>
-        `;
+        const text = document.createElement("p");
+        text.textContent = task.text;
 
-        card.addEventListener("dragstart", dragStart);
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.className = "edit";
 
-        card.querySelector(".edit").addEventListener("click", () => {
-            const newText = prompt("Edit task:", task.text);
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.className = "delete";
 
-            if (newText !== null && newText.trim() !== "") {
+        editBtn.onclick = function () {
+            const newText = prompt("Edit Task", task.text);
+            if (newText && newText.trim() !== "") {
                 task.text = newText.trim();
                 saveTasks();
                 renderTasks();
             }
-        });
+        };
 
-        card.querySelector(".delete").addEventListener("click", () => {
+        deleteBtn.onclick = function () {
             tasks = tasks.filter(t => t.id !== task.id);
             saveTasks();
             renderTasks();
+        };
+
+        card.appendChild(text);
+        card.appendChild(editBtn);
+        card.appendChild(deleteBtn);
+
+        card.addEventListener("dragstart", function () {
+            card.classList.add("dragging");
         });
 
-        columns[task.status].appendChild(card);
+        card.addEventListener("dragend", function () {
+            card.classList.remove("dragging");
+        });
 
+        if (task.status === "todo") {
+            todo.appendChild(card);
+        } else if (task.status === "progress") {
+            progress.appendChild(card);
+        } else {
+            done.appendChild(card);
+        }
     });
 
-    showEmptyMessages();
     updateCounts();
 }
 
 function addTask() {
-
     const text = taskInput.value.trim();
 
     if (text === "") return;
 
     tasks.push({
         id: Date.now().toString(),
-        text,
+        text: text,
         status: "todo"
     });
 
@@ -97,42 +102,39 @@ function addTask() {
 
 addBtn.addEventListener("click", addTask);
 
-taskInput.addEventListener("keypress", e => {
-    if (e.key === "Enter") addTask();
+taskInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+        addTask();
+    }
 });
 
-let draggedCard = null;
+[todo, progress, done].forEach(function (column) {
 
-function dragStart(e) {
-    draggedCard = e.target;
-}
-
-Object.keys(columns).forEach(status => {
-
-    const column = columns[status];
-
-    column.addEventListener("dragover", e => {
+    column.addEventListener("dragover", function (e) {
         e.preventDefault();
-        column.classList.add("drag-over");
     });
 
-    column.addEventListener("dragleave", () => {
-        column.classList.remove("drag-over");
-    });
+    column.addEventListener("drop", function () {
+        const card = document.querySelector(".dragging");
 
-    column.addEventListener("drop", () => {
+        if (!card) return;
 
-        column.classList.remove("drag-over");
+        const id = card.dataset.id;
 
-        const id = draggedCard.dataset.id;
+        const task = tasks.find(function (t) {
+            return t.id === id;
+        });
 
-        const task = tasks.find(t => t.id === id);
-
-        task.status = status;
+        if (column.id === "todo") {
+            task.status = "todo";
+        } else if (column.id === "progress") {
+            task.status = "progress";
+        } else {
+            task.status = "done";
+        }
 
         saveTasks();
         renderTasks();
-
     });
 
 });
