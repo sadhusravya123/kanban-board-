@@ -144,4 +144,19 @@ document.querySelectorAll(".task-list").forEach(column => {
 
 });
 
-renderTasks();
+document.addEventListener("DOMContentLoaded", () => {
+
+    renderTasks();
+
+    document.getElementById("addBtn")
+        .addEventListener("click", addTask);
+
+    document.querySelectorAll(".task-list").forEach(column => {
+
+        column.addEventListener("dragover", allowDrop);
+
+        column.addEventListener("drop", drop);
+
+    });
+
+});
