@@ -1,258 +1,140 @@
-let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
+const taskInput = document.getElementById("taskInput");
+const addBtn = document.getElementById("addBtn");
 
-const columns = ["todo", "progress", "done"];
+const columns = {
+    todo: document.getElementById("todo"),
+    progress: document.getElementById("progress"),
+    done: document.getElementById("done")
+};
+
+let tasks = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
 
 function saveTasks() {
     localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
 }
 
-function addTask() {
+function updateCounts() {
+    document.getElementById("todoCount").textContent =
+        `(${tasks.filter(task => task.status === "todo").length})`;
 
-    const input = document.getElementById("taskInput");
-    const text = input.value.trim();
+    document.getElementById("progressCount").textContent =
+        `(${tasks.filter(task => task.status === "progress").length})`;
 
-    if (text === "") {
-        alert("Please enter a task.");
-        return;
-    }
-
-    tasks.push({
-        id: crypto.randomUUID(),
-        text: text,
-        status: "todo",
-        created: new Date().toLocaleString()
-    });
-
-    input.value = "";
-
-    saveTasks();
-    renderBoard();
-
+    document.getElementById("doneCount").textContent =
+        `(${tasks.filter(task => task.status === "done").length})`;
 }
 
-function renderBoard() {
+function showEmptyMessages() {
+    Object.keys(columns).forEach(status => {
+        const column = columns[status];
 
-    columns.forEach(column => {
-
-        const list = document.getElementById(column);
-
-        list.innerHTML = "";
-
+        if (column.children.length === 0) {
+            column.innerHTML = `<div class="empty">No tasks</div>`;
+        }
     });
+}
+
+function renderTasks() {
+
+    Object.values(columns).forEach(col => col.innerHTML = "");
 
     tasks.forEach(task => {
 
-        const card = createCard(task);
+        const card = document.createElement("div");
+        card.className = "card";
+        card.draggable = true;
+        card.dataset.id = task.id;
 
-        document.getElementById(task.status).appendChild(card);
+        card.innerHTML = `
+            <p>${task.text}</p>
+            <button class="edit">Edit</button>
+            <button class="delete">Delete</button>
+        `;
 
-    });
+        card.addEventListener("dragstart", dragStart);
 
-    columns.forEach(column => {
+        card.querySelector(".edit").addEventListener("click", () => {
+            const newText = prompt("Edit task:", task.text);
 
-        const list = document.getElementById(column);
+            if (newText !== null && newText.trim() !== "") {
+                task.text = newText.trim();
+                saveTasks();
+                renderTasks();
+            }
+        });
 
-        if (list.children.length === 0) {
+        card.querySelector(".delete").addEventListener("click", () => {
+            tasks = tasks.filter(t => t.id !== task.id);
+            saveTasks();
+            renderTasks();
+        });
 
-            const empty = document.createElement("div");
-
-            empty.className = "empty";
-
-            empty.innerHTML = "No tasks yet";
-
-            list.appendChild(empty);
-
-        }
-
-    });
-
-    updateCounters();
-
-}
-function createCard(task) {
-
-    const card = document.createElement("div");
-
-    card.className = "card";
-    card.draggable = true;
-    card.dataset.id = task.id;
-
-    card.innerHTML = `
-        <p>${task.text}</p>
-
-        <small>${task.created}</small>
-
-        <br><br>
-
-        <button class="edit">Edit</button>
-
-        <button class="delete">Delete</button>
-    `;
-
-    card.addEventListener("dragstart", dragStart);
-
-    card.addEventListener("dragend", dragEnd);
-
-    card.querySelector(".edit").addEventListener("click", () => {
-
-        editTask(task.id);
+        columns[task.status].appendChild(card);
 
     });
 
-    card.querySelector(".delete").addEventListener("click", () => {
-
-        deleteTask(task.id);
-
-    });
-
-    return card;
-
+    showEmptyMessages();
+    updateCounts();
 }
 
-function editTask(id) {
+function addTask() {
 
-    const task = tasks.find(t => t.id === id);
+    const text = taskInput.value.trim();
 
-    if (!task) return;
+    if (text === "") return;
 
-    const updated = prompt("Edit Task", task.text);
+    tasks.push({
+        id: Date.now().toString(),
+        text,
+        status: "todo"
+    });
 
-    if (updated === null) return;
-
-    const text = updated.trim();
-
-    if (text === "") {
-
-        alert("Task cannot be empty.");
-
-        return;
-
-    }
-
-    task.text = text;
+    taskInput.value = "";
 
     saveTasks();
-
-    renderBoard();
-
+    renderTasks();
 }
 
-function deleteTask(id) {
+addBtn.addEventListener("click", addTask);
 
-    if (!confirm("Delete this task?")) return;
+taskInput.addEventListener("keypress", e => {
+    if (e.key === "Enter") addTask();
+});
 
-    tasks = tasks.filter(task => task.id !== id);
+let draggedCard = null;
 
-    saveTasks();
-
-    renderBoard();
-
+function dragStart(e) {
+    draggedCard = e.target;
 }
 
-function updateCounters() {
+Object.keys(columns).forEach(status => {
 
-    document.getElementById("todoCount").innerHTML =
-        "(" + tasks.filter(t => t.status === "todo").length + ")";
+    const column = columns[status];
 
-    document.getElementById("progressCount").innerHTML =
-        "(" + tasks.filter(t => t.status === "progress").length + ")";
+    column.addEventListener("dragover", e => {
+        e.preventDefault();
+        column.classList.add("drag-over");
+    });
 
-    document.getElementById("doneCount").innerHTML =
-        "(" + tasks.filter(t => t.status === "done").length + ")";
-
-}
-
-function dragStart(event) {
-
-    event.dataTransfer.effectAllowed = "move";
-
-    event.dataTransfer.setData(
-        "text/plain",
-        event.currentTarget.dataset.id
-    );
-
-    event.currentTarget.style.opacity = "0.5";
-
-}
-
-function dragEnd(event) {
-
-    event.currentTarget.style.opacity = "1";
-
-    document.querySelectorAll(".task-list").forEach(column => {
+    column.addEventListener("dragleave", () => {
         column.classList.remove("drag-over");
     });
 
-}
+    column.addEventListener("drop", () => {
 
-function allowDrop(event) {
+        column.classList.remove("drag-over");
 
-    event.preventDefault();
+        const id = draggedCard.dataset.id;
 
-}
+        const task = tasks.find(t => t.id === id);
 
-function dragEnter(event) {
+        task.status = status;
 
-    event.preventDefault();
-
-    event.currentTarget.classList.add("drag-over");
-
-}
-
-function dragLeave(event) {
-
-    event.currentTarget.classList.remove("drag-over");
-
-}
-
-function drop(event) {
-
-    event.preventDefault();
-
-    event.currentTarget.classList.remove("drag-over");
-
-    const id = event.dataTransfer.getData("text/plain");
-
-    const column = event.currentTarget.id;
-
-    const task = tasks.find(t => t.id === id);
-
-    if (!task) return;
-
-    task.status = column;
-
-    saveTasks();
-
-    renderBoard();
-
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    renderBoard();
-
-    document.getElementById("addBtn").addEventListener("click", addTask);
-
-    document.getElementById("taskInput").addEventListener("keydown", function(event){
-
-        if(event.key === "Enter"){
-
-            addTask();
-
-        }
-
-    });
-
-    document.querySelectorAll(".task-list").forEach(column => {
-
-        column.addEventListener("dragover", allowDrop);
-
-        column.addEventListener("dragenter", dragEnter);
-
-        column.addEventListener("dragleave", dragLeave);
-
-        column.addEventListener("drop", drop);
+        saveTasks();
+        renderTasks();
 
     });
 
 });
+
+renderTasks();
